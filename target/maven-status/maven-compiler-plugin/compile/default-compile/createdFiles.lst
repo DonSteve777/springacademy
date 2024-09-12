@@ -1,0 +1,4 @@
+com\rest\cashcard\CashCard.class
+com\rest\cashcard\CashCardRepository.class
+com\rest\cashcard\CashcardApplication.class
+com\rest\cashcard\CashCardController.class
