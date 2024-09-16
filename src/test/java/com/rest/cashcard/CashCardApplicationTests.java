@@ -9,6 +9,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.annotation.DirtiesContext.ClassMode;
 
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
@@ -18,7 +20,7 @@ import net.minidev.json.JSONArray;
 // lanza la app en modo test
 // habilita peticiones 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-//@DirtiesContext(classMode = ClassMode.AFTER_EACH_TEST_METHOD)
+@DirtiesContext(classMode = ClassMode.AFTER_EACH_TEST_METHOD)
 class CashCardApplicationTests {
 
     @Autowired
@@ -50,6 +52,7 @@ class CashCardApplicationTests {
     // 	//...
     // }
     @Test
+    @DirtiesContext
     void shouldCreateANewOne() {
         CashCard cc = new CashCard(null, 250.00);
         ResponseEntity<Void> response = restTemplate.postForEntity("/cashcards", cc, Void.class);
@@ -84,6 +87,21 @@ class CashCardApplicationTests {
         assertThat(read.size()).isEqualTo(1);
 
         double amount = documentContext.read("$[0].amount");
-        assertThat(amount).isEqualTo(123.45);
+        assertThat(amount).isEqualTo(150.00);
+    }
+
+    @Test
+    void shouldreturnSortedPageOfCardsWithNoParametersAndUseDefaultValues(){
+        ResponseEntity<String> response = restTemplate.getForEntity("/cashcards", String.class);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+
+        DocumentContext dc = JsonPath.parse(response.getBody());
+        JSONArray page = dc.read("$[*]");
+        assertThat(page.size()).isEqualTo(3);
+
+        JSONArray amounts = dc.read("$..amount");
+        assertThat(amounts).containsExactly(1.00, 123.45, 150.00);
+
+
     }
 }
